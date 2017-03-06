@@ -146,7 +146,7 @@ func validateNoMatch(t *testing.T, re *Regexp, m *Match) {
 		return
 	}
 
-	problem(t, "Expected no match for pattern '%v', but got '%v'", re.pattern, m.String())
+	problem(t, "Expected no match for pattern '%v', but got '%v'", re.Pattern, m.String())
 }
 
 func validateMatch(t *testing.T, re *Regexp, m *Match, toMatch, value string, idx, capIdx int) {
@@ -157,34 +157,34 @@ func validateMatch(t *testing.T, re *Regexp, m *Match, toMatch, value string, id
 
 	if m == nil {
 		// we didn't match, but should have
-		problem(t, "Expected match for pattern '%v' with input '%v', but got no match", re.pattern, toMatch)
+		problem(t, "Expected match for pattern '%v' with input '%v', but got no match", re.Pattern, toMatch)
 		return
 	}
 
 	g := m.Groups()
 	if len(g) <= idx {
-		problem(t, "Expected group %v does not exist in pattern '%v' with input '%v'", idx, re.pattern, toMatch)
+		problem(t, "Expected group %v does not exist in pattern '%v' with input '%v'", idx, re.Pattern, toMatch)
 		return
 	}
 
 	if value == "<unset>" {
 		// this means we shouldn't have a cap for this group
 		if len(g[idx].Captures) > 0 {
-			problem(t, "Expected no cap %v in group %v in pattern '%v' with input '%v'", g[idx].Captures[capIdx].String(), idx, re.pattern, toMatch)
+			problem(t, "Expected no cap %v in group %v in pattern '%v' with input '%v'", g[idx].Captures[capIdx].String(), idx, re.Pattern, toMatch)
 		}
 
 		return
 	}
 
 	if len(g[idx].Captures) <= capIdx {
-		problem(t, "Expected cap %v does not exist in group %v in pattern '%v' with input '%v'", capIdx, idx, re.pattern, toMatch)
+		problem(t, "Expected cap %v does not exist in group %v in pattern '%v' with input '%v'", capIdx, idx, re.Pattern, toMatch)
 		return
 	}
 
 	escp := unEscapeGroup(g[idx].String())
 	//escp := unEscapeGroup(g[idx].Captures[capIdx].String())
 	if escp != value {
-		problem(t, "Expected '%v' but got '%v' for cap %v, group %v for pattern '%v' with input '%v'", value, escp, capIdx, idx, re.pattern, toMatch)
+		problem(t, "Expected '%v' but got '%v' for cap %v, group %v for pattern '%v' with input '%v'", value, escp, capIdx, idx, re.Pattern, toMatch)
 		return
 	}
 }
@@ -252,7 +252,7 @@ func matchString(t *testing.T, re *Regexp, toMatch string) *Match {
 	}
 	m, err := re.FindStringMatch(escp)
 	if err != nil {
-		problem(t, "Error matching \"%v\" in pattern \"%v\": %v", toMatch, re.pattern, err)
+		problem(t, "Error matching \"%v\" in pattern \"%v\": %v", toMatch, re.Pattern, err)
 	}
 	return m
 }

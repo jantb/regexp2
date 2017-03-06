@@ -11,7 +11,7 @@ import (
 func TestBacktrack_CatastrophicTimeout(t *testing.T) {
 	r, err := Compile("(.+)*\\?", 0)
 	r.MatchTimeout = time.Millisecond * 1
-	t.Logf("code dump: %v", r.code.Dump())
+	t.Logf("code dump: %v", r.Code.Dump())
 	m, err := r.FindStringMatch("Do you think you found the problem string!")
 	if err == nil {
 		t.Errorf("expected timeout err")
@@ -23,21 +23,21 @@ func TestBacktrack_CatastrophicTimeout(t *testing.T) {
 
 func TestSetPrefix(t *testing.T) {
 	r := MustCompile(`^\s*-TEST`, 0)
-	if r.code.FcPrefix == nil {
+	if r.Code.FcPrefix == nil {
 		t.Fatalf("Expected prefix set [-\\s] but was nil")
 	}
-	if r.code.FcPrefix.PrefixSet.String() != "[-\\s]" {
-		t.Fatalf("Expected prefix set [\\s-] but was %v", r.code.FcPrefix.PrefixSet.String())
+	if r.Code.FcPrefix.PrefixSet.String() != "[-\\s]" {
+		t.Fatalf("Expected prefix set [\\s-] but was %v", r.Code.FcPrefix.PrefixSet.String())
 	}
 }
 
 func TestSetInCode(t *testing.T) {
 	r := MustCompile(`(?<body>\s*(?<name>.+))`, 0)
-	t.Logf("code dump: %v", r.code.Dump())
-	if want, got := 1, len(r.code.Sets); want != got {
+	t.Logf("code dump: %v", r.Code.Dump())
+	if want, got := 1, len(r.Code.Sets); want != got {
 		t.Fatalf("r.code.Sets wanted %v, got %v", want, got)
 	}
-	if want, got := "[\\s]", r.code.Sets[0].String(); want != got {
+	if want, got := "[\\s]", r.Code.Sets[0].String(); want != got {
 		t.Fatalf("first set wanted %v, got %v", want, got)
 	}
 }
@@ -215,7 +215,7 @@ func TestGroups_Basic(t *testing.T) {
 	}
 
 	fatalf := func(re *Regexp, v d, format string, args ...interface{}) {
-		args = append(args, v, re.code.Dump())
+		args = append(args, v, re.Code.Dump())
 
 		t.Fatalf(format+" using test data: %#v\ndump:%v", args...)
 	}
@@ -326,23 +326,23 @@ func TestConstantUneffected(t *testing.T) {
 	// had a bug where "constant" sets would get modified with alternations and be broken in memory until restart
 	// this meant that if you used a known-set (like \s) in a larger set it would "poison" \s for the process
 	re := MustCompile(`(\s|\*)test\s`, 0)
-	if want, got := 2, len(re.code.Sets); want != got {
+	if want, got := 2, len(re.Code.Sets); want != got {
 		t.Fatalf("wanted %v sets, got %v", want, got)
 	}
-	if want, got := "[\\*\\s]", re.code.Sets[0].String(); want != got {
+	if want, got := "[\\*\\s]", re.Code.Sets[0].String(); want != got {
 		t.Fatalf("wanted set 0 %v, got %v", want, got)
 	}
-	if want, got := "[\\s]", re.code.Sets[1].String(); want != got {
+	if want, got := "[\\s]", re.Code.Sets[1].String(); want != got {
 		t.Fatalf("wanted set 1 %v, got %v", want, got)
 	}
 }
 
 func TestAlternationConstAndEscape(t *testing.T) {
 	re := MustCompile(`\:|\s`, 0)
-	if want, got := 1, len(re.code.Sets); want != got {
+	if want, got := 1, len(re.Code.Sets); want != got {
 		t.Fatalf("wanted %v sets, got %v", want, got)
 	}
-	if want, got := "[:\\s]", re.code.Sets[0].String(); want != got {
+	if want, got := "[:\\s]", re.Code.Sets[0].String(); want != got {
 		t.Fatalf("wanted set 0 %v, got %v", want, got)
 	}
 }
@@ -360,18 +360,18 @@ func TestStartingCharsOptionalNegate(t *testing.T) {
 	// this would deviate from corefx
 
 	re := MustCompile(`(^(\S{2} )?\S{2}(\d+|/) *\S{3}\S{3} ?\d{2,4}[A-Z] ?\d{2}[A-Z]{3}|(\S{2} )?\d{2,4})`, 0)
-	if re.code.FcPrefix != nil {
-		t.Fatalf("FcPrefix wanted nil, got %v", re.code.FcPrefix)
+	if re.Code.FcPrefix != nil {
+		t.Fatalf("FcPrefix wanted nil, got %v", re.Code.FcPrefix)
 	}
 }
 
 func TestParseNegativeDigit(t *testing.T) {
 	re := MustCompile(`\D`, 0)
-	if want, got := 1, len(re.code.Sets); want != got {
+	if want, got := 1, len(re.Code.Sets); want != got {
 		t.Fatalf("wanted %v sets, got %v", want, got)
 	}
 
-	if want, got := "[\\P{Nd}]", re.code.Sets[0].String(); want != got {
+	if want, got := "[\\P{Nd}]", re.Code.Sets[0].String(); want != got {
 		t.Fatalf("wanted set 0 %v, got %v", want, got)
 	}
 }
@@ -390,10 +390,10 @@ func TestRunNegativeDigit(t *testing.T) {
 func TestCancellingClasses(t *testing.T) {
 	// [\w\W\s] should become "." because it means "anything"
 	re := MustCompile(`[\w\W\s]`, 0)
-	if want, got := 1, len(re.code.Sets); want != got {
+	if want, got := 1, len(re.Code.Sets); want != got {
 		t.Fatalf("wanted %v sets, got %v", want, got)
 	}
-	if want, got := syntax.AnyClass().String(), re.code.Sets[0].String(); want != got {
+	if want, got := syntax.AnyClass().String(), re.Code.Sets[0].String(); want != got {
 		t.Fatalf("wanted set 0 %v, got %v", want, got)
 	}
 }
@@ -406,10 +406,10 @@ func TestConcatLoopCaptureSet(t *testing.T) {
 	// the two header's pointed to the same underlying byte array...which was mutated.
 
 	re := MustCompile(`(A|B)*CD`, 0)
-	if want, got := 1, len(re.code.Sets); want != got {
+	if want, got := 1, len(re.Code.Sets); want != got {
 		t.Fatalf("wanted %v sets, got %v", want, got)
 	}
-	if want, got := "[AB]", re.code.Sets[0].String(); want != got {
+	if want, got := "[AB]", re.Code.Sets[0].String(); want != got {
 		t.Fatalf("wanted set 0 %v, got %v", want, got)
 	}
 }
@@ -420,11 +420,11 @@ func TestFirstcharsIgnoreCase(t *testing.T) {
 	// so our set's were potentially not searching properly
 	re := MustCompile(`((?i)AB(?-i)C|D)E`, 0)
 
-	if re.code.FcPrefix == nil {
+	if re.Code.FcPrefix == nil {
 		t.Fatalf("wanted prefix, got nil")
 	}
 
-	if want, got := "[ad]", re.code.FcPrefix.PrefixSet.String(); want != got {
+	if want, got := "[ad]", re.Code.FcPrefix.PrefixSet.String(); want != got {
 		t.Fatalf("wanted prefix %v, got %v", want, got)
 	}
 }

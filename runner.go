@@ -621,7 +621,7 @@ func (r *runner) execute() error {
 					break
 				}
 			} else {
-				if (r.re.options & ECMAScript) == 0 {
+				if (r.re.Options & ECMAScript) == 0 {
 					break
 				}
 			}
@@ -1335,10 +1335,10 @@ func (r *runner) initMatch() {
 	// Use a hashtable'ed Match object if the capture numbers are sparse
 
 	if r.runmatch == nil {
-		if r.re.caps != nil {
-			r.runmatch = newMatchSparse(r.re, r.re.caps, r.re.capsize, r.runtext, r.runtextstart)
+		if r.re.Caps != nil {
+			r.runmatch = newMatchSparse(r.re, r.re.Caps, r.re.Capsize, r.runtext, r.runtextstart)
 		} else {
-			r.runmatch = newMatch(r.re, r.re.capsize, r.runtext, r.runtextstart)
+			r.runmatch = newMatch(r.re, r.re.Capsize, r.runtext, r.runtextstart)
 		}
 	} else {
 		r.runmatch.reset(r.runtext, r.runtextstart)
@@ -1605,7 +1605,7 @@ func (re *Regexp) getRunner() *runner {
 	re.muRun.Unlock()
 	z := &runner{
 		re:   re,
-		code: re.code,
+		code: re.Code,
 	}
 	return z
 }

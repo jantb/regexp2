@@ -28,15 +28,15 @@ type Regexp struct {
 	MatchTimeout time.Duration
 
 	// read-only after Compile
-	pattern string       // as passed to Compile
-	options RegexOptions // options
+	Pattern string       // as passed to Compile
+	Options RegexOptions // options
 
-	caps     map[int]int    // capnum->index
-	capnames map[string]int //capture group name -> index
-	capslist []string       //sorted list of capture group names
-	capsize  int            // size of the capture array
+	Caps     map[int]int    // capnum->index
+	Capnames map[string]int //capture group name -> index
+	Capslist []string       //sorted list of capture group names
+	Capsize  int            // size of the capture array
 
-	code *syntax.Code // compiled program
+	Code *syntax.Code // compiled program
 
 	// cache of machines for running regexp
 	muRun  sync.Mutex
@@ -60,13 +60,13 @@ func Compile(expr string, opt RegexOptions) (*Regexp, error) {
 
 	// return it
 	return &Regexp{
-		pattern:      expr,
-		options:      opt,
-		caps:         code.Caps,
-		capnames:     tree.Capnames,
-		capslist:     tree.Caplist,
-		capsize:      code.Capsize,
-		code:         code,
+		Pattern:      expr,
+		Options:      opt,
+		Caps:         code.Caps,
+		Capnames:     tree.Capnames,
+		Capslist:     tree.Caplist,
+		Capsize:      code.Capsize,
+		Code:         code,
 		MatchTimeout: DefaultMatchTimeout,
 	}, nil
 }
@@ -94,7 +94,7 @@ func Unescape(input string) (string, error) {
 
 // String returns the source text used to compile the regular expression.
 func (re *Regexp) String() string {
-	return re.pattern
+	return re.Pattern
 }
 
 func quote(s string) string {
@@ -123,11 +123,11 @@ const (
 )
 
 func (re *Regexp) RightToLeft() bool {
-	return re.options&RightToLeft != 0
+	return re.Options&RightToLeft != 0
 }
 
 func (re *Regexp) Debug() bool {
-	return re.options&Debug != 0
+	return re.Options&Debug != 0
 }
 
 // Replace searches the input string and replaces each match found with the replacement text.
@@ -135,7 +135,7 @@ func (re *Regexp) Debug() bool {
 // us to skip past possible matches at the start of the input (left or right depending on RightToLeft option).
 // Set startAt and count to -1 to go through the whole string
 func (re *Regexp) Replace(input, replacement string, startAt, count int) (string, error) {
-	data, err := syntax.NewReplacerData(replacement, re.caps, re.capsize, re.capnames, syntax.RegexOptions(re.options))
+	data, err := syntax.NewReplacerData(replacement, re.Caps, re.Capsize, re.Capnames, syntax.RegexOptions(re.Options))
 	if err != nil {
 		return "", err
 	}
@@ -261,15 +261,15 @@ func (re *Regexp) MatchRunes(r []rune) (bool, error) {
 func (re *Regexp) GetGroupNames() []string {
 	var result []string
 
-	if re.capslist == nil {
-		result = make([]string, re.capsize)
+	if re.Capslist == nil {
+		result = make([]string, re.Capsize)
 
-		for i := 0; i < re.capsize; i++ {
+		for i := 0; i < re.Capsize; i++ {
 			result[i] = strconv.Itoa(i)
 		}
 	} else {
-		result = make([]string, len(re.capslist))
-		copy(result, re.capslist)
+		result = make([]string, len(re.Capslist))
+		copy(result, re.Capslist)
 	}
 
 	return result
@@ -279,16 +279,16 @@ func (re *Regexp) GetGroupNames() []string {
 func (re *Regexp) GetGroupNumbers() []int {
 	var result []int
 
-	if re.caps == nil {
-		result = make([]int, re.capsize)
+	if re.Caps == nil {
+		result = make([]int, re.Capsize)
 
-		for i := 0; i < re.capsize; i++ {
+		for i := 0; i < re.Capsize; i++ {
 			result[i] = i
 		}
 	} else {
-		result = make([]int, len(re.caps))
+		result = make([]int, len(re.Caps))
 
-		for k, v := range re.caps {
+		for k, v := range re.Caps {
 			result[v] = k
 		}
 	}
@@ -300,23 +300,23 @@ func (re *Regexp) GetGroupNumbers() []int {
 // It will return "" for and unknown group number.  Unnamed groups automatically
 // receive a name that is the decimal string equivalent of its number.
 func (re *Regexp) GroupNameFromNumber(i int) string {
-	if re.capslist == nil {
-		if i >= 0 && i < re.capsize {
+	if re.Capslist == nil {
+		if i >= 0 && i < re.Capsize {
 			return strconv.Itoa(i)
 		}
 
 		return ""
 	}
 
-	if re.caps != nil {
+	if re.Caps != nil {
 		var ok bool
-		if i, ok = re.caps[i]; !ok {
+		if i, ok = re.Caps[i]; !ok {
 			return ""
 		}
 	}
 
-	if i >= 0 && i < len(re.capslist) {
-		return re.capslist[i]
+	if i >= 0 && i < len(re.Capslist) {
+		return re.Capslist[i]
 	}
 
 	return ""
@@ -327,8 +327,8 @@ func (re *Regexp) GroupNameFromNumber(i int) string {
 // automatically get a group name that is the decimal string equivalent of its number.
 func (re *Regexp) GroupNumberFromName(name string) int {
 	// look up name if we have a hashtable of names
-	if re.capnames != nil {
-		if k, ok := re.capnames[name]; ok {
+	if re.Capnames != nil {
+		if k, ok := re.Capnames[name]; ok {
 			return k
 		}
 
@@ -349,7 +349,7 @@ func (re *Regexp) GroupNumberFromName(name string) int {
 	}
 
 	// return int if it's in range
-	if result >= 0 && result < re.capsize {
+	if result >= 0 && result < re.Capsize {
 		return result
 	}
 
